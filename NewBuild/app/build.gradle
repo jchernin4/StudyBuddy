@@ -4,18 +4,17 @@ plugins {
 }
 
 repositories {
-    // Use Maven Central for resolving dependencies.
     mavenCentral()
 }
 
 dependencies {
-    implementation("io.javalin:javalin:5.4.2")
-        // https://mvnrepository.com/artifact/org.mongodb/mongodb-driver
-        implementation 'org.mongodb:mongodb-driver:3.12.12'
-        // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
-        implementation 'org.slf4j:slf4j-simple:2.0.7'
-        // https://mvnrepository.com/artifact/at.favre.lib/bcrypt
-        implementation 'at.favre.lib:bcrypt:0.10.2'
+    implementation 'io.javalin:javalin:5.4.2'
+    // https://mvnrepository.com/artifact/org.mongodb/mongodb-driver
+    implementation 'org.mongodb:mongodb-driver:3.12.12'
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-simple
+    implementation 'org.slf4j:slf4j-simple:2.0.7'
+    // https://mvnrepository.com/artifact/at.favre.lib/bcrypt
+    implementation 'at.favre.lib:bcrypt:0.10.2'
 }
 
 application {
