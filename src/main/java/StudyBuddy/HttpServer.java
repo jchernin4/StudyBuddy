@@ -1,11 +1,17 @@
 package StudyBuddy;
 
+import com.mongodb.Block;
+import com.mongodb.client.FindIterable;
+import com.mongodb.client.MongoCursor;
 import io.javalin.Javalin;
+import io.javalin.plugin.bundled.CorsPluginConfig;
 import org.bson.Document;
+import org.eclipse.jetty.http.HttpStatus;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 
 public class HttpServer {
     private static HttpServer instance;
@@ -22,6 +28,9 @@ public class HttpServer {
     private HttpServer() {
         mongoManager = MongoManager.getInstance();
         app = Javalin.create(config -> {
+            config.plugins.enableCors(cors -> {
+                cors.add(CorsPluginConfig::anyHost);
+            });
         }).start(Settings.HTTP_SERVER_PORT);
     }
 
@@ -34,13 +43,58 @@ public class HttpServer {
         });
 
         app.post("/signup", ctx -> {
-            ctx.header("Access-Control-Allow-Origin", "*");
+            Document doc = Document.parse(ctx.body());
+            System.out.println(doc.toJson());
+            MongoManager.getInstance().registerUser(doc.getString("firstname"), doc.getString("lastname"), doc.getString("email"), doc.getString("username"), doc.getString("password"));
+        });
 
+        app.post("/login", ctx -> {
             Document doc = Document.parse(ctx.body());
 
-            System.out.println(doc.toJson());
+            boolean verified = MongoManager.getInstance().verifyPassword(doc.getString("email"), doc.getString("password"));
 
-            MongoManager.getInstance().registerUser(doc.getString("email"));
+            // The security here is terrible, I know, but we're just trying to get a working site for the competition
+            if (verified) {
+                ctx.status(HttpStatus.OK_200);
+                return;
+            }
+
+            ctx.status(HttpStatus.FORBIDDEN_403);
+        });
+
+        app.post("/groups/create", ctx -> {
+            Document doc = Document.parse(ctx.body());
+            System.out.println(doc.toJson());
+            MongoManager.getInstance().createGroup(doc.getString("name"));
+        });
+
+        app.get("/groups/list", ctx -> {
+            FindIterable<Document> list = MongoManager.getInstance().getGroupList();
+            ArrayList<String> names = new ArrayList<String>();
+            MongoCursor<Document> cursor = list.cursor();
+
+            while (cursor.hasNext()) {
+                names.add(cursor.next().getString("name"));
+            }
+
+            Document listDoc = new Document("list", names);
+            ctx.result(listDoc.toJson());
+        });
+
+        app.get("/groups/{name}/messages", ctx -> {
+            String groupName = ctx.pathParam("name");
+            Document groupDoc = MongoManager.getInstance().getGroup(groupName);
+
+            ctx.result(groupDoc.toJson());
+        });
+
+        app.post("/groups/{name}/messages", ctx -> {
+            Document doc = Document.parse(ctx.body());
+            String groupName = ctx.pathParam("name");
+
+            MongoManager.getInstance().addMessage(groupName, doc.getString("message"), doc.getString("username"));
+
+            ctx.status(HttpStatus.CREATED_201);
         });
     }
 }

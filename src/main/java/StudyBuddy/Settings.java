@@ -8,4 +8,5 @@ public class Settings {
     public static final String MONGO_URI = "mongodb://" + SERVER_IP + ":" + MONGO_PORT;
     public static final String MONGO_DATABASE_NAME = "StudyBuddy";
     public static final String MONGO_USERS_COLLECTION_NAME = "Users";
+    public static final String MONGO_GROUPS_COLLECTION_NAME = "Groups";
 }
